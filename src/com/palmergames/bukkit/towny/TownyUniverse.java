@@ -779,7 +779,7 @@ public class TownyUniverse {
     
     public void endWarEvent() {
         if (warEvent != null && warEvent.isWarTime()) {
-            warEvent.toggleEnd();
+            warEvent.end();
         }
     }	
 
@@ -844,7 +844,13 @@ public class TownyUniverse {
     	return false;
     }
     
-    
+    public boolean hasWarEvent(Resident resident) {
+     	for (War war : getWars()) {
+     		if (war.isWarringResident(resident))
+				return true;
+     	}
+     	return false;
+    }
     public void setWarEvent(War warEvent) {
         this.warEvent = warEvent;
     }
