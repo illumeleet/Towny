@@ -801,6 +801,9 @@ public class TownyWorld extends TownyObject {
 		return tb;
 	}
 
+	/*
+	 * Flag War Only.
+	 */
 	public void addWarZone(Coord coord) {
 
 		if (!isWarZone(coord))
