@@ -137,7 +137,7 @@ public class TownyUniverse {
 	 */
 	@Deprecated
 	public void addWarZone(WorldCoord worldCoord) {
-		com.palmergames.bukkit.towny.TownyUniverse.getInstance().addWarZone(worldCoord);
+		com.palmergames.bukkit.towny.TownyUniverse.getInstance().addFlagWarZone(worldCoord);
 	}
 
 	/**
@@ -146,6 +146,6 @@ public class TownyUniverse {
 	 */
 	@Deprecated
 	public void removeWarZone(WorldCoord worldCoord) {
-		com.palmergames.bukkit.towny.TownyUniverse.getInstance().removeWarZone(worldCoord);
+		com.palmergames.bukkit.towny.TownyUniverse.getInstance().removeFlagWarZone(worldCoord);
 	}
 }
