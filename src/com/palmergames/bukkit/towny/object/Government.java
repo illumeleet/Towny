@@ -1,5 +1,6 @@
 package com.palmergames.bukkit.towny.object;
 
+import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.event.GovernmentTagChangeEvent;
 import com.palmergames.bukkit.towny.exceptions.EconomyException;
@@ -11,10 +12,12 @@ import com.palmergames.bukkit.towny.object.economy.AccountAuditor;
 import com.palmergames.bukkit.towny.object.economy.BankEconomyHandler;
 import com.palmergames.bukkit.towny.object.economy.BankAccount;
 import com.palmergames.bukkit.towny.object.economy.GovernmentAccountAuditor;
+import com.palmergames.bukkit.util.BookFactory;
 import com.palmergames.util.StringMgmt;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -224,7 +227,7 @@ public abstract class Government extends TownyObject implements BankEconomyHandl
 		if (!TownySettings.isUsingEconomy()) {
 			throw new TownyException(Translation.of("msg_err_no_economy"));
 		}
-		if (!getAccount().payTo(amount, resident, getName() + " - " + " Withdraw")) {
+		if (!getAccount().payTo(amount, resident, "Withdraw by " + resident.getName())) {
 			throw new TownyException(Translation.of("msg_err_no_money"));
 		}
 	}
@@ -281,4 +284,20 @@ public abstract class Government extends TownyObject implements BankEconomyHandl
 	 * @return The {@link World} this object is in.
 	 */
 	public abstract World getWorld();
+	
+	public void generateBankHistoryBook(Player player, int desiredPages) {
+		int size = getAccount().getAuditor().getAuditHistory().size();
+
+		if (desiredPages > size) {
+			TownyMessaging.sendErrorMsg(player, Translation.of("list_err_not_enough_pages", size));
+			return;
+		}
+		List<String> pages = new ArrayList<>(desiredPages);
+		for (int i = 1; i <= desiredPages; i++) {
+			pages.add(getAccount().getAuditor().getAuditHistory().get(size-i));
+		}
+
+		player.getInventory().addItem(BookFactory.makeBook("Bank History", getName(), pages));
+		TownyMessaging.sendMsg(player, "Bank Transaction Book Given!");
+	}
 }
