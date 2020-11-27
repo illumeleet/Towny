@@ -100,16 +100,17 @@ public class TownyEntityListener implements Listener {
 		 * TownyExplosionDamagesEntityEvent,) EXCEPT for cases where the defender is a
 		 * (Player or non-protected mob) and the attacker is an Explosive EntityType.
 		 */
-		
-		List<Class<?>> prots = EntityTypeUtil.parseLivingEntityClassNames(TownySettings.getEntityTypes(), "TownMobPVM:");
-		
-		if (!(EntityTypeUtil.isExplosive(attacker.getType()) && (defender instanceof Player || !EntityTypeUtil.isInstanceOfAny(prots, defender))) 
+		List<Class<?>> protectedMobs = EntityTypeUtil.parseLivingEntityClassNames(TownySettings.getEntityTypes(), "TownMobPVM:");
+		if (!(EntityTypeUtil.isExplosive(attacker.getType()) && (defender instanceof Player || !EntityTypeUtil.isInstanceOfAny(protectedMobs, defender))) 
 				&& event.getCause() == DamageCause.ENTITY_EXPLOSION 
 				&& !TownyActionEventExecutor.canExplosionDamageEntities(event.getEntity().getLocation(), event.getEntity(), event.getCause())) {
 			event.setDamage(0);
 			event.setCancelled(true);
 		}
 
+		/*
+		 * This handles the remaining non-explosion damages. 
+		 */
 		if (CombatUtil.preventDamageCall(plugin, attacker, defender)) {
 			// Remove the projectile here so no
 			// other events can fire to cause damage
@@ -180,7 +181,8 @@ public class TownyEntityListener implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onEntityTakesBlockExplosionDamage(EntityDamageEvent event) {
 		if (plugin.isError()) {
-				return;
+			event.setCancelled(true);
+			return;
 		}
 		
 		if (!TownyAPI.getInstance().isTownyWorld(event.getEntity().getWorld()))
@@ -199,6 +201,11 @@ public class TownyEntityListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onDragonFireBallCloudDamage(AreaEffectCloudApplyEvent event) {
+		if (plugin.isError()) {
+			event.setCancelled(true);
+			return;
+		}
+		
 		if (!TownyAPI.getInstance().isTownyWorld(event.getEntity().getWorld()))
 			return;
 		
@@ -230,6 +237,15 @@ public class TownyEntityListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onLingeringPotionSplashEvent(LingeringPotionSplashEvent event) {
+		
+		if (plugin.isError()) {
+			event.setCancelled(true);
+			return;
+		}
+
+		if (!TownyAPI.getInstance().isTownyWorld(event.getEntity().getWorld()))
+			return;
+		
 		ThrownPotion potion = event.getEntity();
 		Location loc = potion.getLocation();		
 		TownyWorld townyWorld = null;
@@ -297,6 +313,15 @@ public class TownyEntityListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onPotionSplashEvent(PotionSplashEvent event) {
+		
+		if (plugin.isError()) {
+			event.setCancelled(true);
+			return;
+		}
+
+		if (!TownyAPI.getInstance().isTownyWorld(event.getEntity().getWorld()))
+			return;
+		
 		List<LivingEntity> affectedEntities = (List<LivingEntity>) event.getAffectedEntities();
 		ThrownPotion potion = event.getPotion();
 		Entity attacker;
@@ -596,6 +621,9 @@ public class TownyEntityListener implements Listener {
 			event.setCancelled(true);
 			return;
 		}
+
+		if (!TownyAPI.getInstance().isTownyWorld(event.getEntity().getWorld()))
+			return;
 
 		Entity combuster = event.getCombuster();
 		Entity defender = event.getEntity();
