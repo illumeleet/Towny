@@ -74,7 +74,6 @@ import com.palmergames.bukkit.towny.utils.ResidentUtil;
 import com.palmergames.bukkit.towny.utils.SpawnUtil;
 import com.palmergames.bukkit.towny.war.common.townruin.TownRuinSettings;
 import com.palmergames.bukkit.towny.war.common.townruin.TownRuinUtil;
-import com.palmergames.bukkit.towny.war.flagwar.FlagWar;
 import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.bukkit.util.ChatTools;
 import com.palmergames.bukkit.util.Colors;
@@ -2720,7 +2719,7 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 	public void townLeave(Player player) {
 
 		try {
-			// TODO: Allow leaving town during war.
+			// TODO: Allow leaving town during event war.
 			if (TownyAPI.getInstance().isWarTime())
 				throw new TownyException(Translation.of("msg_war_cannot_do"));
 
@@ -3628,11 +3627,7 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 				town = resident.getTown();
 				world = townyUniverse.getDataSource().getWorld(player.getWorld().getName());
 
-				if (FlagWar.isUnderAttack(town) && TownySettings.isFlaggedInteractionTown())
-					throw new TownyException(Translation.of("msg_war_flag_deny_town_under_attack"));
-
-				if (System.currentTimeMillis()- FlagWar.lastFlagged(town) < TownySettings.timeToWaitAfterFlag())
-					throw new TownyException(Translation.of("msg_war_flag_deny_recently_attacked"));
+				// TODO Cancelable Event For Wars
 				
 				if (split.length == 1 && split[0].equalsIgnoreCase("all")) {
 					if (!townyUniverse.getPermissionSource().testPermission(player, PermissionNodes.TOWNY_COMMAND_TOWN_UNCLAIM_ALL.getNode()))
