@@ -2219,9 +2219,6 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 						if (townBlock == null || townBlock.getTown() != town)
 							throw new TownyException(Translation.of("msg_area_not_own"));
 
-						if (TownyAPI.getInstance().isWarTime())
-							throw new TownyException(Translation.of("msg_war_cannot_do"));
-
 						world = townyUniverse.getDataSource().getWorld(player.getWorld().getName());
 						final int minDistanceFromHomeblock = world.getMinDistanceFromOtherTowns(coord, resident.getTown());
 						if (minDistanceFromHomeblock < TownySettings.getMinDistanceFromTownHomeblocks())
