@@ -56,7 +56,7 @@ public class TownPeacefulnessUtil {
 			town.decrementPeacefulnessChangeConfirmationCounterDays();
 
 			if(town.getPeacefulnessChangeConfirmationCounterDays() < 1) {
-				town.flipPeaceful();
+				town.setNeutral(!town.isNeutral());
 
 				if(SiegeWarSettings.getWarSiegeEnabled()) {
 					if (town.isPeaceful()) {

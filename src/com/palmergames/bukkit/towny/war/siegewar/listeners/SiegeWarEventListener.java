@@ -9,7 +9,6 @@ import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -32,15 +31,14 @@ import com.palmergames.bukkit.towny.event.nation.NationRankAddEvent;
 import com.palmergames.bukkit.towny.event.nation.PreNewNationEvent;
 import com.palmergames.bukkit.towny.event.town.TownRuinedEvent;
 import com.palmergames.bukkit.towny.event.town.toggle.TownToggleExplosionEvent;
+import com.palmergames.bukkit.towny.event.town.toggle.TownToggleNeutralEvent;
 import com.palmergames.bukkit.towny.event.town.toggle.TownToggleOpenEvent;
 import com.palmergames.bukkit.towny.event.town.toggle.TownTogglePVPEvent;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
-import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.Translation;
-import com.palmergames.bukkit.towny.permissions.PermissionNodes;
 import com.palmergames.bukkit.towny.utils.TownPeacefulnessUtil;
 import com.palmergames.bukkit.towny.war.siegewar.SiegeWarSettings;
 import com.palmergames.bukkit.towny.war.siegewar.enums.SiegeSide;
@@ -350,16 +348,20 @@ public class SiegeWarEventListener implements Listener {
 		if (!SiegeWarSettings.getWarSiegeEnabled())
 			return;
 		
-		if(!SiegeWarSettings.getWarCommonPeacefulTownsEnabled())
-			throw new TownyException(Translation.of("msg_err_command_disable"));
+		if (!SiegeWarSettings.getWarCommonPeacefulTownsEnabled()) {
+			event.setCancelled(true);
+			return;
+		}	
 		
 		Town town = event.getTown();
 		
-		if(event.isAdminAction()) {
-			town.setDesiredPeacefulnessValue(!town.isPeaceful());
-			town.setPeacefulnessChangeConfirmationCounterDays(1);
-			TownPeacefulnessUtil.updateTownPeacefulnessCounters(town);
+		if (event.isAdminAction()) {
+			town.setNeutral(!town.isPeaceful());
 		} else {
+			// Stop the toggling to neutral, so that SW can use the counter.
+			event.setCancelled(true);
+			event.setCancellationMsg("");
+			
 			if (town.getPeacefulnessChangeConfirmationCounterDays() == 0) {
 				
 				//Here, no countdown is in progress, and the town wishes to change peacefulness status
@@ -383,7 +385,9 @@ public class SiegeWarEventListener implements Listener {
 				for(Resident peacefulTownResident: town.getResidents()) {
 					for (String nationRank : new ArrayList<>(peacefulTownResident.getNationRanks())) {
 						if (SiegeWarPermissionUtil.doesNationRankAllowPermissionNode(nationRank, SiegeWarPermissionNodes.TOWNY_NATION_SIEGE_POINTS)) {
-							peacefulTownResident.removeNationRank(nationRank);
+							try {
+								peacefulTownResident.removeNationRank(nationRank);
+							} catch (NotRegisteredException e) {}
 						}
 					}
 				}
