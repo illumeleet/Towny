@@ -72,7 +72,7 @@ public class Town extends Government implements TownBlockOwner {
 	private long siegeImmunityEndTime;
 	private Siege siege;
 	private boolean occupied;
-	private boolean peaceful;
+//	private boolean peaceful;
 	private boolean desiredPeacefulnessValue;
 	private int peacefulnessChangeConfirmationCounterDays;
 
@@ -83,7 +83,7 @@ public class Town extends Government implements TownBlockOwner {
 		siegeImmunityEndTime = 0;
 		siege = null;
 		occupied = false;
-		peaceful = false;
+//		peaceful = false;
 		desiredPeacefulnessValue = false;
 		peacefulnessChangeConfirmationCounterDays = 0;
 		
@@ -1468,7 +1468,7 @@ public class Town extends Government implements TownBlockOwner {
 	}
 	
 	public boolean isPeaceful() {
-		return peaceful;
+		return isNeutral();
 	}
 
 	public int getPeacefulnessChangeConfirmationCounterDays() {
@@ -1480,7 +1480,7 @@ public class Town extends Government implements TownBlockOwner {
 	}
 
 	public void flipPeaceful() {
-		peaceful = !peaceful;
+		setNeutral(!this.isNeutral());
 	}
 
 	public void flipDesiredPeacefulnessValue() {
@@ -1500,7 +1500,7 @@ public class Town extends Government implements TownBlockOwner {
 	}
 
 	public void setPeaceful(boolean value) {
-		peaceful = value;
+		setNeutral(value);
 	}
 
 	/**

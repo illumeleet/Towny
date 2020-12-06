@@ -20,6 +20,7 @@ import com.palmergames.bukkit.towny.event.TownPreRenameEvent;
 import com.palmergames.bukkit.towny.event.TownPreAddResidentEvent;
 import com.palmergames.bukkit.towny.event.TownPreTransactionEvent;
 import com.palmergames.bukkit.towny.event.TownTransactionEvent;
+import com.palmergames.bukkit.towny.event.town.TownLeaveEvent;
 import com.palmergames.bukkit.towny.event.town.TownPreSetHomeBlockEvent;
 import com.palmergames.bukkit.towny.event.town.toggle.TownToggleUnknownEvent;
 import com.palmergames.bukkit.towny.event.town.toggle.TownToggleExplosionEvent;
@@ -103,8 +104,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static com.palmergames.util.TimeMgmt.ONE_HOUR_IN_MILLIS;
 
 /**
  * Send a list of all town help commands to player Command: /town
@@ -1412,7 +1411,7 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 	public void townMayor(Player player, String[] split) {
 
 		if (split.length == 0 || split[0].equalsIgnoreCase("?"))
-			showTownMayorHelp(player);
+			HelpMenu.TOWN_MAYOR_HELP.send(player);
 	}
 
 	/**
@@ -1426,26 +1425,10 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 			if (TownyAPI.getInstance().isWilderness(player.getLocation()))
 				throw new TownyException(Translation.of("msg_not_claimed", Coord.parseCoord(player.getLocation())));
 
-			Town town = TownyAPI.getInstance().getTownBlock(player.getLocation()).getTown();
-			TownyMessaging.sendMessage(player, TownyFormatter.getStatus(town));
+			TownyMessaging.sendMessage(player, TownyFormatter.getStatus(TownyAPI.getInstance().getTown(player.getLocation())));
 		} catch (TownyException e) {
 			TownyMessaging.sendErrorMsg(player, e.getMessage());
 		}
-	}
-
-	public void showTownMayorHelp(Player player) {
-
-		player.sendMessage(ChatTools.formatTitle("Town Mayor Help"));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "withdraw [$]", ""));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "claim", "'/town claim ?' " + Translation.of("res_5")));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "unclaim", "'/town " + Translation.of("res_5")));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "[add/kick] " + Translation.of("res_2") + " .. []", Translation.of("res_6")));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "set [] .. []", "'/town set' " + Translation.of("res_5")));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "buy [] .. []", "'/town buy' " + Translation.of("res_5")));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "plots", ""));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "toggle", ""));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "rank add/remove [resident] [rank]", "'/town rank ?' " + Translation.of("res_5")));
-		player.sendMessage(ChatTools.formatCommand(Translation.of("mayor_sing"), "/town", "delete", ""));
 	}
 
 	public static void townToggle(CommandSender sender, String[] split, boolean admin, Town town) throws TownyException {
@@ -1611,14 +1594,6 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 				
 			} else if (split[0].equalsIgnoreCase("open")) {
 
-				if(SiegeWarSettings.getWarSiegeEnabled()
-					&& SiegeWarSettings.getWarSiegeBesiegedTownRecruitmentDisabled()
-					&& town.hasSiege()
-					&& town.getSiege().getStatus().isActive())
-				{
-					throw new TownyException(Translation.of("msg_err_siege_besieged_town_cannot_toggle_open_off"));
-				}
-
 				if(town.isBankrupt())
 					throw new TownyException(Translation.of("msg_err_bankrupt_town_cannot_toggle_open"));
 
@@ -1723,7 +1698,7 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 				if(!SiegeWarSettings.getWarCommonPeacefulTownsEnabled())
 					throw new TownyException(Translation.of("msg_err_command_disable"));
 				
-				if (!townyUniverse.getPermissionSource().testPermission((Player)sender, PermissionNodes.TOWNY_COMMAND_TOWN_TOGGLE_PEACEFUL.getNode(split[0].toLowerCase())))
+				if (!townyUniverse.getPermissionSource().testPermission((Player)sender, PermissionNodes.TOWNY_COMMAND_TOWN_TOGGLE_NEUTRAL.getNode(split[0].toLowerCase())))
 					throw new TownyException(Translation.of("msg_err_command_disable"));
 				
 				if(admin) {
@@ -1816,25 +1791,11 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 		if (split.contains("explosion")) {
 			if (town.getHomeblockWorld().isForceExpl())
 				throw new TownyException(Translation.of("msg_world_expl"));
-			
-			if(SiegeWarSettings.getWarSiegeEnabled()
-				&& SiegeWarSettings.getWarSiegeExplosionsAlwaysOnInBesiegedTowns()
-				&& town.hasSiege()
-				&& town.getSiege().getStatus().isActive())  {
-				throw new TownyException(Translation.of("msg_err_siege_besieged_town_cannot_toggle_explosions"));
-			}
 		}
 
 		if (split.contains("pvp")) {
 			if (town.getHomeblockWorld().isForcePVP())
 				throw new TownyException(Translation.of("msg_world_pvp"));
-
-			if(SiegeWarSettings.getWarSiegeEnabled()
-				&& SiegeWarSettings.getWarSiegePvpAlwaysOnInBesiegedTowns()
-				&& town.hasSiege()
-				&& town.getSiege().getStatus().isActive())  {
-				throw new TownyException(Translation.of("msg_err_siege_besieged_town_cannot_toggle_pvp"));
-			}
 		}
 	}
 
@@ -2755,10 +2716,6 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 				throw new TownyException("The server economy plugin " + TownyEconomyHandler.getVersion() + " could not return the Town account!");
 			}
 		}
-
-		town.setSiegeImmunityEndTime(System.currentTimeMillis() + (long)(SiegeWarSettings.getWarSiegeSiegeImmunityTimeNewTownsHours() * ONE_HOUR_IN_MILLIS));
-		town.setPeaceful(SiegeWarSettings.getWarCommonNewTownPeacefulnessEnabled());
-		town.setDesiredPeacefulnessValue(SiegeWarSettings.getWarCommonNewTownPeacefulnessEnabled());
 		
 		townyDataSource.saveResident(resident);
 		townyDataSource.saveTownBlock(townBlock);
@@ -2797,81 +2754,61 @@ public class TownCommand extends BaseCommand implements CommandExecutor, TabComp
 	}
 
 	public void townLeave(Player player) {
-		TownyUniverse townyUniverse = TownyUniverse.getInstance();
 
-		Resident resident;
-		Town town;
 		try {
 			// TODO: Allow leaving town during war.
 			if (TownyAPI.getInstance().isWarTime())
 				throw new TownyException(Translation.of("msg_war_cannot_do"));
 
-			resident = townyUniverse.getDataSource().getResident(player.getName());
-			town = resident.getTown();
+			Resident resident = TownyUniverse.getInstance().getDataSource().getResident(player.getName());
 			
-			if (FlagWar.isUnderAttack(town) && TownySettings.isFlaggedInteractionTown()) {
-				TownyMessaging.sendErrorMsg(player, Translation.of("msg_war_flag_deny_town_under_attack"));
-				return;
-			}
+			if (!resident.hasTown())
+				throw new TownyException(Translation.of("msg_err_dont_belong_town"));
+			
+			Town town = resident.getTown();
+			
+			if (resident.isMayor())
+				throw new TownyException(Translation.of("msg_mayor_abandon"));
+			
+			if (resident.isJailed() && TownySettings.JailDeniesTownLeave() && resident.getJailTown().equals(town.getName()))
+				throw new TownyException(Translation.of("msg_cannot_abandon_town_while_jailed"));
+			
+			TownLeaveEvent event = new TownLeaveEvent(resident, town);
+			Bukkit.getPluginManager().callEvent(event);
+			if (event.isCancelled()) 
+				throw new TownyException(event.getCancelMessage());
 
-			if (System.currentTimeMillis()- FlagWar.lastFlagged(town) < TownySettings.timeToWaitAfterFlag()) {
-				TownyMessaging.sendErrorMsg(player, Translation.of("msg_war_flag_deny_recently_attacked"));
-				return;
-			}
-			
-			plugin.deleteCache(resident.getName());
+			Confirmation.runOnAccept(() -> {
+				if (resident.isJailed() && resident.getJailTown().equals(town.getName())) {
+					resident.setJailed(false);
+					resident.setJailSpawn(0);
+					resident.setJailTown("");
+					TownyMessaging.sendPrefixedTownMessage(town, Translation.of("msg_player_escaped_jail_by_leaving_town", resident.getName()));
+				}
+
+				try {
+					townRemoveResident(town, resident);
+				} catch (NotRegisteredException ignored) {}
+
+				// Reset everyones cache permissions as this player leaving could affect
+				// multiple areas
+				plugin.resetCache();
+
+				TownyMessaging.sendPrefixedTownMessage(town, Translation.of("msg_left_town", resident.getName()));
+				TownyMessaging.sendMsg(player, Translation.of("msg_left_town", resident.getName()));
+
+				try {
+					checkTownResidents(town, resident);
+				} catch (NotRegisteredException e) {
+					e.printStackTrace();
+				}
+			}).sendTo(player);
 
 		} catch (TownyException x) {
 			TownyMessaging.sendErrorMsg(player, x.getMessage());
 			return;
 		}
 
-		if (resident.isMayor()) {
-			TownyMessaging.sendErrorMsg(player, Translation.of("msg_mayor_abandon"));
-			return;
-		}
-
-		Confirmation.runOnAccept(() -> {
-			if (resident.isJailed()) {
-				try {
-					if (resident.getJailTown().equals(resident.getTown().getName())) {
-						if (TownySettings.JailDeniesTownLeave()) {
-							TownyMessaging.sendErrorMsg(player, Translation.of("msg_cannot_abandon_town_while_jailed"));
-							return;
-						}
-						resident.setJailed(false);
-						resident.setJailSpawn(0);
-						resident.setJailTown("");
-						TownyMessaging.sendPrefixedTownMessage(town, Translation.of("msg_player_escaped_jail_by_leaving_town", resident.getName()));
-					}
-				} catch (NotRegisteredException e) {
-					e.printStackTrace();
-				}
-			}
-
-			try {
-				townRemoveResident(town, resident);
-			} catch (NotRegisteredException x) {
-				TownyMessaging.sendErrorMsg(player, x.getMessage());
-				return;
-			}
-			
-			townyUniverse.getDataSource().saveResident(resident);
-			townyUniverse.getDataSource().saveTown(town);
-
-			// Reset everyones cache permissions as this player leaving could affect
-			// multiple areas
-			plugin.resetCache();
-
-			TownyMessaging.sendPrefixedTownMessage(town, Translation.of("msg_left_town", resident.getName()));
-			TownyMessaging.sendMsg(player, Translation.of("msg_left_town", resident.getName()));
-
-			try {
-				checkTownResidents(town, resident);
-			} catch (NotRegisteredException e) {
-				e.printStackTrace();
-			}
-		}).sendTo(player);
 	}
 
 	/**
