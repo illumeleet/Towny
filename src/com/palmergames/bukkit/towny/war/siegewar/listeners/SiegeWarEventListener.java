@@ -21,6 +21,7 @@ import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.TownyUniverse;
 import com.palmergames.bukkit.towny.event.NationPreAddTownEvent;
+import com.palmergames.bukkit.towny.event.NewDayEvent;
 import com.palmergames.bukkit.towny.event.NewTownEvent;
 import com.palmergames.bukkit.towny.event.PreDeleteNationEvent;
 import com.palmergames.bukkit.towny.event.TownPreAddResidentEvent;
@@ -332,6 +333,18 @@ public class SiegeWarEventListener implements Listener {
 				&& event.getTown().getSiege().getStatus().isActive()) {
 			event.setCancellationMsg(Translation.of("msg_err_siege_besieged_town_cannot_toggle_open_off"));
 			event.setCancelled(true);
+		}
+	}
+
+	/*
+	 * Update town peacefulness counters.
+	 */
+	@EventHandler
+	public void onNewDay(NewDayEvent event) {
+		if (SiegeWarSettings.getWarCommonPeacefulTownsEnabled()) {
+			TownPeacefulnessUtil.updateTownPeacefulnessCounters();
+			if(SiegeWarSettings.getWarSiegeEnabled())
+				TownPeacefulnessUtil.evaluatePeacefulTownNationAssignments();
 		}
 	}
 }
