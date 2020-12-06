@@ -1467,10 +1467,6 @@ public class Town extends Government implements TownBlockOwner {
 		return StringMgmt.trimMaxLength(Town.ECONOMY_ACCOUNT_PREFIX + getName(), 32);
 	}
 	
-	public boolean isPeaceful() {
-		return isNeutral();
-	}
-
 	public int getPeacefulnessChangeConfirmationCounterDays() {
 		return peacefulnessChangeConfirmationCounterDays;
 	}
@@ -1479,28 +1475,16 @@ public class Town extends Government implements TownBlockOwner {
 		peacefulnessChangeConfirmationCounterDays--;
 	}
 
-	public void flipPeaceful() {
-		setNeutral(!this.isNeutral());
-	}
-
-	public void flipDesiredPeacefulnessValue() {
-		desiredPeacefulnessValue = !desiredPeacefulnessValue;
-	}
-
 	public void setPeacefulnessChangeConfirmationCounterDays(int counterValueDays) {
 		peacefulnessChangeConfirmationCounterDays = counterValueDays;
-	}
-
-	public void setDesiredPeacefulnessValue(boolean value) {
-		desiredPeacefulnessValue = value;
 	}
 
 	public boolean getDesiredPeacefulnessValue() {
 		return desiredPeacefulnessValue;
 	}
-
-	public void setPeaceful(boolean value) {
-		setNeutral(value);
+	
+	public void setDesiredPeacefulnessValue(boolean value) {
+		desiredPeacefulnessValue = value;
 	}
 
 	/**

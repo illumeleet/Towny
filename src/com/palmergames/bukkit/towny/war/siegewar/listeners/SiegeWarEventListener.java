@@ -93,7 +93,7 @@ public class SiegeWarEventListener implements Listener {
 	 */
 	@EventHandler
 	public void onNationAddTownEvent(NationPreAddTownEvent event) {
-		if(SiegeWarSettings.getWarSiegeEnabled() && SiegeWarSettings.getWarCommonPeacefulTownsEnabled() && event.getTown().isPeaceful()) {
+		if(SiegeWarSettings.getWarSiegeEnabled() && SiegeWarSettings.getWarCommonPeacefulTownsEnabled() && event.getTown().isNeutral()) {
 			Set<Nation> validGuardianNations = TownPeacefulnessUtil.getValidGuardianNations(event.getTown());
 			if(!validGuardianNations.contains(event.getNation())) {
 				event.setCancelMessage(Translation.of("msg_war_siege_peaceful_town_cannot_join_nation", 
@@ -112,7 +112,7 @@ public class SiegeWarEventListener implements Listener {
 	@EventHandler
 	public void onNewNationEvent(PreNewNationEvent event) {
 		if (SiegeWarSettings.getWarSiegeEnabled() && SiegeWarSettings.getWarCommonPeacefulTownsEnabled()
-				&& event.getTown().isPeaceful()) {
+				&& event.getTown().isNeutral()) {
 			TownyMessaging.sendMsg(event.getTown().getMayor(),
 					Translation.of("msg_war_siege_warning_peaceful_town_should_not_create_nation"));
 		}
@@ -212,7 +212,7 @@ public class SiegeWarEventListener implements Listener {
 
 			Town town = event.getTown();
 			//If a peaceful town has no options, we don't let it revolt
-			if(SiegeWarSettings.getWarCommonPeacefulTownsEnabled() && town.isPeaceful()) {
+			if(SiegeWarSettings.getWarCommonPeacefulTownsEnabled() && town.isNeutral()) {
 				Set<Nation> validGuardianNations = TownPeacefulnessUtil.getValidGuardianNations(town);
 				if(validGuardianNations.size() == 0) {
 					event.setCancelMessage(Translation.of("msg_war_siege_peaceful_town_cannot_revolt_nearby_guardian_towns_zero", 
@@ -262,7 +262,7 @@ public class SiegeWarEventListener implements Listener {
 		if(SiegeWarSettings.getWarSiegeEnabled()
 			&& SiegeWarSettings.getWarCommonPeacefulTownsEnabled()
 			&& SiegeWarPermissionUtil.doesNationRankAllowPermissionNode(event.getRank(), SiegeWarPermissionNodes.TOWNY_NATION_SIEGE_POINTS)
-			&& event.getResident().getTown().isPeaceful()) { // We know that the resident's town will not be null based on the tests already done.
+			&& event.getResident().getTown().isNeutral()) { // We know that the resident's town will not be null based on the tests already done.
 			event.setCancelled(true);
 			event.setCancelMessage(Translation.of("msg_war_siege_cannot_add_nation_military_rank_to_peaceful_resident"));
 		}
@@ -356,7 +356,7 @@ public class SiegeWarEventListener implements Listener {
 		Town town = event.getTown();
 		
 		if (event.isAdminAction()) {
-			town.setNeutral(!town.isPeaceful());
+			town.setNeutral(!town.isNeutral());
 		} else {
 			// Stop the toggling to neutral, so that SW can use the counter.
 			event.setCancelled(true);
@@ -365,7 +365,7 @@ public class SiegeWarEventListener implements Listener {
 			if (town.getPeacefulnessChangeConfirmationCounterDays() == 0) {
 				
 				//Here, no countdown is in progress, and the town wishes to change peacefulness status
-				town.setDesiredPeacefulnessValue(!town.isPeaceful());
+				town.setDesiredPeacefulnessValue(!town.isNeutral());
 				
 				int counterValue;
 				if(System.currentTimeMillis() < (town.getRegistered() + (TimeMgmt.ONE_DAY_IN_MILLIS * 7))) {
@@ -394,7 +394,7 @@ public class SiegeWarEventListener implements Listener {
 				
 			} else {
 				//Here, a countdown is in progress, and the town wishes to cancel the countdown,
-				town.setDesiredPeacefulnessValue(town.isPeaceful());
+				town.setDesiredPeacefulnessValue(town.isNeutral());
 				town.setPeacefulnessChangeConfirmationCounterDays(0);
 				//Send message to town
 				TownyMessaging.sendPrefixedTownMessage(town, String.format(Translation.of("msg_war_common_town_peacefulness_countdown_cancelled")));
