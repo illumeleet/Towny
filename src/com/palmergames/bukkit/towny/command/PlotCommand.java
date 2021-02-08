@@ -52,6 +52,8 @@ import com.palmergames.bukkit.util.NameValidation;
 import com.palmergames.util.StringMgmt;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -1112,7 +1114,25 @@ public class PlotCommand extends BaseCommand implements CommandExecutor {
 				if (split[0].equalsIgnoreCase("pvp")) {
 					// Make sure we are allowed to set these permissions.
 					toggleTest(player, townBlock, StringMgmt.join(split, " "));
-					
+					//togglepvp fix PC-1
+					Resident resident;
+					resident = TownyUniverse.getInstance().getResident(player.getName());
+					if (resident != null) {
+					boolean outsiderintown = false;
+					for (Player target : Bukkit.getOnlinePlayers()) {
+						Resident targetresident = TownyUniverse.getInstance().getResident(target.getName());
+						Block block = target.getLocation().getBlock().getRelative(BlockFace.DOWN);
+						if (!TownyAPI.getInstance().isWilderness(block.getLocation())) {
+							WorldCoord coord = WorldCoord.parseWorldCoord(target.getLocation());
+							if (coord.equals(townBlock.getWorldCoord()) && ((!(targetresident.hasTown())) || (!(targetresident.getTown().equals(townBlock.getTown()))))) {
+								outsiderintown = true;
+							}
+						}
+					}
+					if(outsiderintown) {
+						throw new TownyException(Translation.of("polit_cubes_msg_err_cannot_toggle_pvp_in_plot_when_outsider_in_town"));
+					} 
+					} //PC-1 END
 					if (TownySettings.getPVPCoolDownTime() > 0 && !permSource.testPermission(player, PermissionNodes.TOWNY_ADMIN.getNode())) {
 						// Test to see if the pvp cooldown timer is active for the town this plot belongs to.
 						if (CooldownTimerTask.hasCooldown(townBlock.getTown().getName(), CooldownType.PVP))
